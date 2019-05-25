@@ -30,7 +30,7 @@ void Draw::Border()
             mvaddch(i,51,'|');
     }
 }
-void Draw::Move(std::vector <Ball> balls)
+void Draw::Move(std::vector <Ball*> balls)
 {
     
     int row,col;
@@ -38,13 +38,12 @@ void Draw::Move(std::vector <Ball> balls)
     clear();
     Border();
     getmaxyx(stdscr,row,col);
-    //win = newwin(0,55,20,0);
     
     for(int i=0;i<balls.size();i++)
     {
-        if(balls[i].getXPosition()<row & balls[i].getYPosition()<col)
+        if(balls[i]->getXPosition()<row & balls[i]->getYPosition()<col)
         {
-            move(balls[i].getXPosition(),balls[i].getYPosition());
+            move(balls[i]->getXPosition(),balls[i]->getYPosition());
             printw("O");
         }
         else
@@ -53,7 +52,6 @@ void Draw::Move(std::vector <Ball> balls)
         }
     }
     //getch();
-    //wrefresh(inputwin);
     refresh();
     usleep(50000);
 }

@@ -10,5 +10,5 @@ class Draw
     ~Draw();
     bool Exit();
     void Border();
-    void Move(std::vector <Ball> balls);
+    void Move(std::vector <Ball*> balls);
 };

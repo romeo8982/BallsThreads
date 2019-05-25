@@ -2,13 +2,18 @@
 #include <thread>
 #include <iostream>
 #include <vector>
-#include <atomic>
 #include <algorithm>
 
 
-bool running = true;
-std::vector <std::thread> threads;
-std::vector <Ball> balls;
+static bool running = true;
+std::vector <std::thread> threads1;
+std::vector <std::thread> threads2;
+std::vector <Ball*> balls;
+std::mutex mtx;
+std::condition_variable cv;
+static bool flag = false;
+
+bool stuck=false;
 
 void Close ()
 {
@@ -16,7 +21,10 @@ void Close ()
 	{
 		char q = getchar();
         if(q == 'q')
+		{
             running = false;
+			Ball::setRunningFlag(false);
+		}
 	}
 }
 
@@ -25,65 +33,53 @@ void do_join(std::thread& t)
     t.join();
 }
 
-void join_all(std::vector<std::thread>& v)
+void join_all()
 {
-    std::for_each(v.begin(),v.end(),do_join);
+    std::for_each(threads1.begin(),threads1.end(),do_join);
 }
 
-void UpdateBall(Ball &ball, int update_time)
+void Refresh(Draw &draw)
 {
-	const auto wait_duration = std::chrono::milliseconds(update_time);
-	while(running)
-    {
-		ball.Update();
-		std::this_thread::sleep_for(wait_duration); 
-    }
-}
-
-void Refresh(Draw &draw, int update_time)
-{
-	const auto wait_duration = std::chrono::milliseconds(update_time);
 	while(running)
     {
 		draw.Move(balls);
-		std::this_thread::sleep_for(wait_duration); 
     }
 }
 
 void NewBall(int update_time)
 {
-	const auto wait_duration = std::chrono::milliseconds(update_time);
-		while(running)
-		{
-		double volacity = rand() % 100 + 1;
+	while(running)
+	{
+		double volacity = 185*((double)rand()/(double)RAND_MAX)+15;
 		int x_position = rand()%15+1;
 		int y_position = rand()%50+1;
 		bool goDown = rand()%2;
 		bool goRight = rand()%2;
-		Ball ball(volacity,x_position,y_position,goDown,goRight);
-		balls.push_back(ball);
-		std::thread thread(std::thread(UpdateBall,std::ref(balls[balls.size()-1]),ball.getVolacity()));
-		threads.push_back(std::move(thread));
-		std::this_thread::sleep_for(wait_duration);
-		}
+		balls.push_back(new Ball(volacity,x_position,y_position,goDown,goRight));
+		threads1.push_back(balls.back()->UpdateThread(/*std::ref(mtx),std::ref(cv),flag*/));
+		//trzeba przekazać mutexa oraz cv ale nie wiem jeszcze jak jak to się uda to powinno dzialać
+		//threads2.push_back(balls.back()->UnstuckThread());
+		std::this_thread::sleep_for(std::chrono::milliseconds(update_time));
+	}
 }
 
 int main()
 {
 	srand (time(NULL));
 	
-	const unsigned int update_interval0 = 5000;
-	const unsigned int update_interval2 = 10;
+	const unsigned int update_interval0 = 3000;
 
+	Ball::setRunningFlag(true);
 	Draw draw;
 	
 	std::thread th0 (NewBall,update_interval0);
-	std::thread th2 (Refresh,std::ref(draw),update_interval2);
+	std::thread th1 (Refresh,std::ref(draw));
 	std::thread exit (Close);
 
     th0.join();
-	th2.join();
-	join_all(threads);
+	th1.join();
+
+	join_all();
 	exit.join();
 
 	return 0;
