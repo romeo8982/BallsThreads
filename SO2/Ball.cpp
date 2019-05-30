@@ -1,4 +1,5 @@
 #include "Ball.h"
+#include "Mutex.h"
 
 bool Ball::running;
 
@@ -39,7 +40,7 @@ void Ball::Update(/*std::mutex mtx,std::condition_variable cv, bool flag*/)
 			x_position--;
 			if(x_position<=1) 
 			{
-				//Unstuck(mtx,cv,flag);
+				SetMutex();
 				goRight = true;
 				x_position--;
 			}
@@ -49,8 +50,7 @@ void Ball::Update(/*std::mutex mtx,std::condition_variable cv, bool flag*/)
 			x_position++;
 			if(x_position>=50) 
 			{
-				//std::unique_lock<std::mutex> lck(mtx);
-				//while (!flag) cv.wait(lck);
+				ObserveMutex();
 				goRight=false;
 			}
 		}

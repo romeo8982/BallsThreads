@@ -1,5 +1,6 @@
 #include "Draw.h"
 #include <unistd.h>
+#include "Mutex.h"
 Draw::Draw()
 {
     initscr();

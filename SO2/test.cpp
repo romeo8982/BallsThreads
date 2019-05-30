@@ -3,17 +3,20 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-
+#include "Mutex.h"
 
 static bool running = true;
 std::vector <std::thread> threads1;
 std::vector <std::thread> threads2;
 std::vector <Ball*> balls;
-std::mutex mtx;
-std::condition_variable cv;
-static bool flag = false;
 
-bool stuck=false;
+
+
+void setMutex()
+{
+
+}
+
 
 void Close ()
 {
@@ -24,6 +27,7 @@ void Close ()
 		{
             running = false;
 			Ball::setRunningFlag(false);
+			SetMutex();
 		}
 	}
 }
@@ -46,22 +50,6 @@ void Refresh(Draw &draw)
     }
 }
 
-//testy
-
-void Test()
-{
-	while(running)
-	{
-		mtx.lock();
-		if(balls[0]->getXPosition()==30)
-		{
-			balls[0]->setXPosition(45);
-		}
-		mtx.unlock();
-	}
-}
-
-
 void NewBall(int update_time)
 {
 	while(running)
@@ -72,7 +60,7 @@ void NewBall(int update_time)
 		bool goDown = rand()%2;
 		bool goRight = rand()%2;
 		balls.push_back(new Ball(volacity,x_position,y_position,goDown,goRight));
-		threads1.push_back(balls.back()->UpdateThread(/*std::ref(mtx),std::ref(cv),flag*/));
+		threads1.push_back(balls.back()->UpdateThread());//std::ref(mtx),std::ref(cv),flag));
 		//trzeba przekazać mutexa oraz cv ale nie wiem jeszcze jak jak to się uda to powinno dzialać
 		//threads2.push_back(balls.back()->UnstuckThread());
 		std::this_thread::sleep_for(std::chrono::milliseconds(update_time));
@@ -83,19 +71,19 @@ int main()
 {
 	srand (time(NULL));
 	
-	const unsigned int update_interval0 = 3000;
+	const unsigned int update_interval0 = 10000;
 
 	Ball::setRunningFlag(true);
 	Draw draw;
 	
 	std::thread th0 (NewBall,update_interval0);
 	std::thread th1 (Refresh,std::ref(draw));
-	std::thread th2 (Test);
+	//std::thread th2 (Test);
 	std::thread exit (Close);
 
     th0.join();
 	th1.join();
-	th2.join();
+	//th2.join();
 
 	join_all();
 	exit.join();
