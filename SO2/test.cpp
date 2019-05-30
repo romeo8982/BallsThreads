@@ -46,6 +46,22 @@ void Refresh(Draw &draw)
     }
 }
 
+//testy
+
+void Test()
+{
+	while(running)
+	{
+		mtx.lock();
+		if(balls[0]->getXPosition()==30)
+		{
+			balls[0]->setXPosition(45);
+		}
+		mtx.unlock();
+	}
+}
+
+
 void NewBall(int update_time)
 {
 	while(running)
@@ -74,10 +90,12 @@ int main()
 	
 	std::thread th0 (NewBall,update_interval0);
 	std::thread th1 (Refresh,std::ref(draw));
+	std::thread th2 (Test);
 	std::thread exit (Close);
 
     th0.join();
 	th1.join();
+	th2.join();
 
 	join_all();
 	exit.join();
